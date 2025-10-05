@@ -59,6 +59,8 @@ namespace ArticoliWebService.Services
                 .HasOne<FamAssort>(a => a.FamAssort)
                 .WithMany(g => g.Articoli)
                 .HasForeignKey(s => s.IdFamAss);
+
+            modelBuilder.Entity<BarcodeEan>().ToTable("Barcode");
             // BarcodeEan ↔ Articoli (Molti-a-Uno)
             // Ad un Articolo corrispondono molti Barcode. La chiave esterna (CodArt) risiede nella tabella BarcodeEan.
             modelBuilder.Entity<BarcodeEan>()

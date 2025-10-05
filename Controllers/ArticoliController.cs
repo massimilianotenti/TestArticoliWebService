@@ -92,27 +92,53 @@ namespace ArticoliWebService.Controllers
         {
             if (!await this.articoliRepository.ArticoloExists(filter))
                 return NotFound(string.Format("Non è stato trovato l'articolo con il codice {0}", filter));
-
-            var articoliDto = new ArticoliDto();
-            var articoli = await this.articoliRepository.SelArticoloByCodice(filter);
+            
+            var articolo = await this.articoliRepository.SelArticoloByCodice(filter);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var articoloDto = new ArticoliDto
             {
-                CodArt = articoli.CodArt,
-                Descrizione = articoli.Descrizione,
-                Um = articoli.Um,
-                CodStat = articoli.CodStat,
-                PzCart = articoli.PzCart,
-                PesoNetto = articoli.PesoNetto,
-                DataCreazione = articoli.DataCreazione
+                CodArt = articolo.CodArt,
+                Descrizione = articolo.Descrizione,
+                Um = articolo.Um,
+                CodStat = articolo.CodStat,
+                PzCart = articolo.PzCart,
+                PesoNetto = articolo.PesoNetto,
+                DataCreazione = articolo.DataCreazione
             };
             // Console.WriteLine(articoloDto.CodArt);
-            return Ok(articoliDto);
+            return Ok(articoloDto);
         }
 
-        
+        [HttpGet("cerca/ean/{filter}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(200, Type = typeof(ArticoliDto))]
+        public async Task<IActionResult> GetArticoliByEan(string filter)
+        {
+            Console.WriteLine(">>> 1");
+            var articolo = await this.articoliRepository.SelArticoloByEan(filter);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            Console.WriteLine(">>> 2");
+            if (articolo == null)
+                return NotFound(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter));
+
+            Console.WriteLine(">>> 3");
+            var articoloDto = new ArticoliDto
+            {
+                CodArt = articolo.CodArt,
+                Descrizione = articolo.Descrizione,
+                Um = articolo.Um,
+                CodStat = articolo.CodStat,
+                PzCart = articolo.PzCart,
+                PesoNetto = articolo.PesoNetto,
+                DataCreazione = articolo.DataCreazione
+            };
+            return Ok(articoloDto);
+        }
 
     }
 }
