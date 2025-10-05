@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ArticoliWebService.Services;
 using Microsoft.AspNetCore.Mvc;
 using ArticoliWebService.Models;
+using ArticoliWebService.Dtos;
 
 namespace ArticoliWebService.Controllers
 {
@@ -55,11 +56,32 @@ namespace ArticoliWebService.Controllers
         // 504 Timeout
         [HttpGet("cerca/descrizione/{filter}")]
         [ProducesResponseType(400)]
-        [ProducesResponseType(200, Type = typeof(IAsyncEnumerable<Articoli>))]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(200, Type = typeof(IAsyncEnumerable<ArticoliDto>))]
         public IActionResult GetArticoliByDesc(string filter)
         {
+            var articoliDto = new List<ArticoliDto>();
             var articoli = this.articoliRepository.SelArticoliByDescrizione(filter);
-            return Ok(articoli);
+            if(!ModelState.IsValid)            
+                return BadRequest(ModelState);
+            
+            if(!articoli.Any())            
+                return NotFound(string.Format("Nonn è stato trovato alcun articolo con la descrizione {0}", filter));
+            
+            foreach (var articolo in articoli)
+            {
+                articoliDto.Add(new ArticoliDto
+                {
+                    CodArt = articolo.CodArt,
+                    Descrizione = articolo.Descrizione,
+                    Um = articolo.Um,
+                    CodStat = articolo.CodStat,
+                    PzCart = articolo.PzCart,
+                    PesoNetto = articolo.PesoNetto,
+                    DataCreazione = articolo.DataCreazione
+                });
+            }            
+            return Ok(articoliDto);
         }
 
         

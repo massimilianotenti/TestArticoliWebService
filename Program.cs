@@ -1,10 +1,13 @@
 using ArticoliWebService.Services;
+using Microsoft.EntityFrameworkCore; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddMvc();
+// Per l'accesso al backend dall'eseterno
+builder.Services.AddCors();
+builder.Services.AddDbContext<AlphaShopDbContext>();
 // Inversion Of Control: a livello di configurazione si specifica quale classe dobbiamo implementare per un'interfaccia
 builder.Services.AddScoped<IArticoliRepository, ArticoliRepository>();
 

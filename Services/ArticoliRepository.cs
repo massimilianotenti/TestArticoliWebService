@@ -15,10 +15,10 @@ namespace ArticoliWebService.Services
             this.dbContext = alphaShopDbContext;
         }
 
-        public ICollection<Articoli> SelArticoliByDescrizione(string descrizione)
+        public IEnumerable<Articoli> SelArticoliByDescrizione(string descrizione)
         {
             return this.dbContext.Articoli
-                .Where(a => a.Descrizione.Contains(descrizione))
+                .Where(a => a.Descrizione!.Contains(descrizione))
                 .OrderBy(a => a.Descrizione)
                 .ToList();
         }
@@ -26,14 +26,14 @@ namespace ArticoliWebService.Services
         public Articoli SelArticoloByCodice(string Code)
         {
             return this.dbContext.Articoli
-                .Where(a => a.CodArt.Equals(Code))                
+                .Where(a => a.CodArt!.Equals(Code))                
                 .FirstOrDefault();
         }
 
         public Articoli SelArticoloByEna(string Ean)
         {
             return this.dbContext.BarcodeEans
-                .Where(b => b.BarCode.Equals(Ean))
+                .Where(b => b.BarCode!.Equals(Ean))
                 .Select(b => b.Articolo)
                 .FirstOrDefault();
         }
@@ -58,7 +58,7 @@ namespace ArticoliWebService.Services
             throw new NotImplementedException();
         }
 
-        public bool ArticoloExists(string Code)
+        public Task<bool> ArticoloExists(string Code)
         {
             throw new NotImplementedException();
         }

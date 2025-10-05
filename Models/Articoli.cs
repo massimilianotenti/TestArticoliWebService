@@ -20,7 +20,7 @@ namespace ArticoliWebService.Models
         public string? CodStat { get; set; }
 
         [Range(0, 100, ErrorMessage = "I pezzi per cartone devonoessere fra 0 e 100")]
-        public int? PzCart { get; set; }
+        public Int16? PzCart { get; set; }
 
         [Range(0.1, 100, ErrorMessage = "Il peso deve essere tra 0.1 e 100")]
         public double? PesoNetto { get; set; }
