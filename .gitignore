@@ -1,0 +1,43 @@
+# Visual Studio / .NET Core specific files
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+*.exe
+*.dll
+*.pdb
+*.suo
+*.user
+*.config
+*.log
+*.lock.json
+*.nuget.g.props
+*.nuget.g.targets
+
+## Packages
+# NuGet packages
+/packages/
+# LibMan libraries
+/libman/
+
+## Visual Studio's cache and user files
+.vs/
+*.opensdf
+*.sdf
+*.vssscc
+*.vsscc
+*.vsp
+*.log
+*.bak
+*.cache
+*.ncb
+*.vc.db
+
+# Rider (JetBrains IDE)
+.idea/
+
+# Windows/macOS/Linux files
+[Tt]humbs.db
+.DS_Store
