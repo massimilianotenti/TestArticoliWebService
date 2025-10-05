@@ -58,16 +58,16 @@ namespace ArticoliWebService.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(200, Type = typeof(IAsyncEnumerable<ArticoliDto>))]
-        public IActionResult GetArticoliByDesc(string filter)
+        public async Task<IActionResult> GetArticoliByDesc(string filter)
         {
             var articoliDto = new List<ArticoliDto>();
-            var articoli = this.articoliRepository.SelArticoliByDescrizione(filter);
-            if(!ModelState.IsValid)            
+            var articoli = await this.articoliRepository.SelArticoliByDescrizione(filter);
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            
-            if(!articoli.Any())            
+
+            if (!articoli.Any())
                 return NotFound(string.Format("Nonn è stato trovato alcun articolo con la descrizione {0}", filter));
-            
+
             foreach (var articolo in articoli)
             {
                 articoliDto.Add(new ArticoliDto
@@ -80,7 +80,35 @@ namespace ArticoliWebService.Controllers
                     PesoNetto = articolo.PesoNetto,
                     DataCreazione = articolo.DataCreazione
                 });
-            }            
+            }
+            return Ok(articoliDto);
+        }
+
+        [HttpGet("cerca/codice/{filter}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(200, Type = typeof(ArticoliDto))]
+        public async Task<IActionResult> GetArticoliByCode(string filter)
+        {
+            if (!await this.articoliRepository.ArticoloExists(filter))
+                return NotFound(string.Format("Non è stato trovato l'articolo con il codice {0}", filter));
+
+            var articoliDto = new ArticoliDto();
+            var articoli = await this.articoliRepository.SelArticoloByCodice(filter);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var articoloDto = new ArticoliDto
+            {
+                CodArt = articoli.CodArt,
+                Descrizione = articoli.Descrizione,
+                Um = articoli.Um,
+                CodStat = articoli.CodStat,
+                PzCart = articoli.PzCart,
+                PesoNetto = articoli.PesoNetto,
+                DataCreazione = articoli.DataCreazione
+            };
+            // Console.WriteLine(articoloDto.CodArt);
             return Ok(articoliDto);
         }
 

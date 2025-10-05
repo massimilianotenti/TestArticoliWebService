@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArticoliWebService.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArticoliWebService.Services
 {
@@ -15,19 +16,19 @@ namespace ArticoliWebService.Services
             this.dbContext = alphaShopDbContext;
         }
 
-        public IEnumerable<Articoli> SelArticoliByDescrizione(string descrizione)
+        public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione)
         {
-            return this.dbContext.Articoli
+            return await this.dbContext.Articoli
                 .Where(a => a.Descrizione!.Contains(descrizione))
                 .OrderBy(a => a.Descrizione)
-                .ToList();
+                .ToListAsync();
         }
 
-        public Articoli SelArticoloByCodice(string Code)
+        public async Task<Articoli> SelArticoloByCodice(string Code)
         {
-            return this.dbContext.Articoli
+            return await this.dbContext.Articoli
                 .Where(a => a.CodArt!.Equals(Code))                
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
         }
 
         public Articoli SelArticoloByEna(string Ean)
@@ -58,9 +59,10 @@ namespace ArticoliWebService.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> ArticoloExists(string Code)
+        public async Task<bool> ArticoloExists(string Code)
         {
-            throw new NotImplementedException();
+            return await this.dbContext.Articoli
+                .AnyAsync(c => c.CodArt == Code);
         }
         
     }

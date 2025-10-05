@@ -8,8 +8,8 @@ namespace ArticoliWebService.Services
 {
     public interface IArticoliRepository
     {
-        IEnumerable<Articoli> SelArticoliByDescrizione(string descrizione);
-        Articoli SelArticoloByCodice(string Code);
+        Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione);
+        Task<Articoli> SelArticoloByCodice(string Code);
         Articoli SelArticoloByEna(string Ean);
         bool InsArticoli(Articoli articolo);
         bool UpdateArticoli(Articoli articolo);
