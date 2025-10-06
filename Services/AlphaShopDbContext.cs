@@ -53,6 +53,8 @@ namespace ArticoliWebService.Services
                 .HasOne<Iva>(a => a.Iva)
                 .WithMany(g => g.Articoli)
                 .HasForeignKey(s => s.IdIva);
+            
+            modelBuilder.Entity<FamAssort>().ToTable("Famassort");
             // Articoli ↔ FamAssort (Molti-a-Uno)
             // Ad una Famiglia di Assortimento corrispondono molti Articoli. La chiave esterna (IdFamAss) risiede nella tabella Articoli
             modelBuilder.Entity<Articoli>()

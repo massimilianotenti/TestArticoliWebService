@@ -70,16 +70,9 @@ namespace ArticoliWebService.Controllers
 
             foreach (var articolo in articoli)
             {
-                articoliDto.Add(new ArticoliDto
-                {
-                    CodArt = articolo.CodArt,
-                    Descrizione = articolo.Descrizione,
-                    Um = articolo.Um,
-                    CodStat = articolo.CodStat,
-                    PzCart = articolo.PzCart,
-                    PesoNetto = articolo.PesoNetto,
-                    DataCreazione = articolo.DataCreazione
-                });
+                var barcodeDto = this.PopolaBarcodeDt(articolo);
+                var artDto = this.PopolaArticoloDt(articolo, barcodeDto);
+                articoliDto.Add(artDto);
             }
             return Ok(articoliDto);
         }
@@ -92,22 +85,14 @@ namespace ArticoliWebService.Controllers
         {
             if (!await this.articoliRepository.ArticoloExists(filter))
                 return NotFound(string.Format("Non è stato trovato l'articolo con il codice {0}", filter));
-            
+
             var articolo = await this.articoliRepository.SelArticoloByCodice(filter);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var articoloDto = new ArticoliDto
-            {
-                CodArt = articolo.CodArt,
-                Descrizione = articolo.Descrizione,
-                Um = articolo.Um,
-                CodStat = articolo.CodStat,
-                PzCart = articolo.PzCart,
-                PesoNetto = articolo.PesoNetto,
-                DataCreazione = articolo.DataCreazione
-            };
-            // Console.WriteLine(articoloDto.CodArt);
+            var barcodeDto = this.PopolaBarcodeDt(articolo);
+            var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
+
             return Ok(articoloDto);
         }
 
@@ -127,6 +112,33 @@ namespace ArticoliWebService.Controllers
                 return NotFound(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter));
 
             Console.WriteLine(">>> 3");
+            var barcodeDto = this.PopolaBarcodeDt(articolo);
+            Console.WriteLine(">>> 4");
+            var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
+
+            Console.WriteLine(">>> 5");
+            return Ok(articoloDto);
+        }
+
+        private List<BarcodeEanDto> PopolaBarcodeDt(Articoli articolo)
+        {
+            var barcodeDto = new List<BarcodeEanDto>();
+            if (articolo.Barcode != null)
+            {
+                foreach (var barcode in articolo.Barcode)
+                {
+                    barcodeDto.Add(new BarcodeEanDto
+                    {
+                        Barcode = barcode.BarCode,
+                        Tipo = barcode.IdTipoArt
+                    });
+                }
+            }
+            return barcodeDto;
+        }
+
+        private ArticoliDto PopolaArticoloDt(Articoli articolo, List<BarcodeEanDto> barcodeDto)
+        {
             var articoloDto = new ArticoliDto
             {
                 CodArt = articolo.CodArt,
@@ -135,10 +147,14 @@ namespace ArticoliWebService.Controllers
                 CodStat = articolo.CodStat,
                 PzCart = articolo.PzCart,
                 PesoNetto = articolo.PesoNetto,
-                DataCreazione = articolo.DataCreazione
+                DataCreazione = articolo.DataCreazione,
+                Ean = barcodeDto,
+                Iva = new IvaDto(articolo.Iva.Descrizione, articolo.Iva.Aliquota),
+                Categoria = articolo.FamAssort.Descrizione
             };
-            return Ok(articoloDto);
+            return articoloDto;
         }
+
 
     }
 }

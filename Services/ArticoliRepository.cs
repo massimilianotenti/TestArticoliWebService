@@ -21,22 +21,34 @@ namespace ArticoliWebService.Services
             return await this.dbContext.Articoli
                 .Where(a => a.Descrizione!.Contains(descrizione))
                 .OrderBy(a => a.Descrizione)
+                .Include(b => b.Barcode)
+                .Include(c => c.FamAssort)
+                .Include(d => d.Ingrediente)
+                .Include(e => e.Iva)
                 .ToListAsync();
         }
 
         public async Task<Articoli> SelArticoloByCodice(string Code)
         {
             return await this.dbContext.Articoli
-                .Where(a => a.CodArt!.Equals(Code))                
+                .Where(a => a.CodArt!.Equals(Code))
+                .Include(b => b.Barcode)            
+                .Include(c => c.FamAssort)
+                .Include(d => d.Ingrediente)
+                .Include(e => e.Iva)
                 .FirstOrDefaultAsync();
         }
 
         public async Task<Articoli> SelArticoloByEan(string Ean)
-        {
-            return await this.dbContext.BarcodeEans
-                .Where(b => b.BarCode!.Equals(Ean))
-                .Select(b => b.Articolo)
+        {            
+            return await this.dbContext.Articoli
+                .Include(b => b.Barcode)
+                .Include(c => c.FamAssort)
+                .Include(d => d.Ingrediente)
+                .Include(e => e.Iva)
+                .Where(a => a.Barcode.Any(b => b.BarCode.Equals(Ean)))
                 .FirstOrDefaultAsync();
+    
         }
 
         public bool InsArticoli(Articoli articolo)
