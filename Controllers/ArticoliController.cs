@@ -31,7 +31,7 @@ namespace ArticoliWebService.Controllers
         //     In questo modo, testi solo la logica del controller, isolandola completamente dal database.
         //
         // 3 - L'Iniezione di Dipendenza, gestita in ASP.NET Core dal Service Container, lavora al meglio con le interfacce.
-        private IArticoliRepository articoliRepository;
+        private readonly IArticoliRepository articoliRepository;
         public ArticoliController(IArticoliRepository articoliRepository)
         {
             this.articoliRepository = articoliRepository;
@@ -66,7 +66,9 @@ namespace ArticoliWebService.Controllers
                 return BadRequest(ModelState);
 
             if (!articoli.Any())
-                return NotFound(string.Format("Nonn è stato trovato alcun articolo con la descrizione {0}", filter));
+                //return NotFound(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter));
+                return NotFound(new ErrMsg(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter),
+                        404));
 
             foreach (var articolo in articoli)
             {
@@ -84,7 +86,9 @@ namespace ArticoliWebService.Controllers
         public async Task<IActionResult> GetArticoliByCode(string filter)
         {
             if (!await this.articoliRepository.ArticoloExists(filter))
-                return NotFound(string.Format("Non è stato trovato l'articolo con il codice {0}", filter));
+                //return NotFound(string.Format("Non è stato trovato l'articolo con il codice {0}", filter));
+                return NotFound(new ErrMsg(string.Format("Non è stato trovato l'articolo con il codice {0}", filter),
+                        404));
 
             var articolo = await this.articoliRepository.SelArticoloByCodice(filter);
             if (!ModelState.IsValid)
@@ -102,21 +106,18 @@ namespace ArticoliWebService.Controllers
         [ProducesResponseType(200, Type = typeof(ArticoliDto))]
         public async Task<IActionResult> GetArticoliByEan(string filter)
         {
-            Console.WriteLine(">>> 1");
             var articolo = await this.articoliRepository.SelArticoloByEan(filter);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            Console.WriteLine(">>> 2");
             if (articolo == null)
-                return NotFound(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter));
-
-            Console.WriteLine(">>> 3");
-            var barcodeDto = this.PopolaBarcodeDt(articolo);
-            Console.WriteLine(">>> 4");
+                //return NotFound(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter));
+                return NotFound(new ErrMsg(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter),
+                        404));
+            
+            var barcodeDto = this.PopolaBarcodeDt(articolo);            
             var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
 
-            Console.WriteLine(">>> 5");
             return Ok(articoloDto);
         }
 
@@ -139,15 +140,18 @@ namespace ArticoliWebService.Controllers
 
         private ArticoliDto PopolaArticoloDt(Articoli articolo, List<BarcodeEanDto> barcodeDto)
         {
+            //Console.WriteLine(articolo.CodArt);
             var articoloDto = new ArticoliDto
             {
                 CodArt = articolo.CodArt,
-                Descrizione = articolo.Descrizione,
-                Um = articolo.Um,
-                CodStat = articolo.CodStat,
+                Descrizione = string.IsNullOrEmpty(articolo.Descrizione) ? "" : articolo.Descrizione.Trim(),
+                Um = string.IsNullOrEmpty(articolo.Um) ? "" : articolo.Um.Trim(),
+                // posso utilizzare anche articolo.CodStat?.Trim() ma se non voglio restituire un valore null devo usare string.IsNullOrEmpty
+                CodStat = string.IsNullOrEmpty(articolo.CodStat) ? "" : articolo.CodStat.Trim(),
                 PzCart = articolo.PzCart,
                 PesoNetto = articolo.PesoNetto,
                 DataCreazione = articolo.DataCreazione,
+                IdStatoArticolo = string.IsNullOrEmpty(articolo.IdStatoArt) ? "" :articolo.IdStatoArt.Trim(),
                 Ean = barcodeDto,
                 Iva = new IvaDto(articolo.Iva.Descrizione, articolo.Iva.Aliquota),
                 Categoria = articolo.FamAssort.Descrizione

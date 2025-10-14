@@ -34,6 +34,8 @@ namespace ArticoliWebService.Models
         public virtual Ingredienti? Ingrediente { get; set; }
         public virtual Iva? Iva { get; set; }
         public virtual FamAssort? FamAssort { get; set; }
-        
+
     }
+        
+    
 }
