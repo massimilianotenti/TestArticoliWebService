@@ -54,6 +54,12 @@ namespace ArticoliWebService.Controllers
         // 501 Non implementato
         // 502 Bad Gateway        
         // 504 Timeout
+
+        /// <summary>
+        /// Filtra per descrizione ed ottiene una lista di articoli
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         [HttpGet("cerca/descrizione/{filter}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -79,6 +85,10 @@ namespace ArticoliWebService.Controllers
             return Ok(articoliDto);
         }
 
+        /// <summary>
+        /// Filtra per codice ed ottiene un singolo articolo
+        /// </summary>
+        /// <param name="filter"></param>
         [HttpGet("cerca/codice/{filter}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -100,6 +110,11 @@ namespace ArticoliWebService.Controllers
             return Ok(articoloDto);
         }
 
+        /// <summary>
+        /// Filtra per codice a barre ed ottiene un singolo articolo
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         [HttpGet("cerca/ean/{filter}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -114,11 +129,95 @@ namespace ArticoliWebService.Controllers
                 //return NotFound(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter));
                 return NotFound(new ErrMsg(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter),
                         404));
-            
-            var barcodeDto = this.PopolaBarcodeDt(articolo);            
+
+            var barcodeDto = this.PopolaBarcodeDt(articolo);
             var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
 
             return Ok(articoloDto);
+        }
+
+        [HttpPost("inserisci")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(422)]
+        [ProducesResponseType(409)]
+        [ProducesResponseType(500)]
+        [ProducesResponseType(201, Type = typeof(ArticoliDto))]
+        public async Task<IActionResult> SaveArticoli([FromBody] Articoli articolo)
+        {
+            if (articolo == null)
+                return BadRequest(new ErrMsg("Dati nuovo Articolo non validi", 400));
+
+            var isPresent = await this.articoliRepository.ArticoloExists(articolo.CodArt);
+            if (isPresent)
+                return Conflict(new ErrMsg($"Articolo con codice {articolo.CodArt} già presente!", 409));
+
+            if (!ModelState.IsValid)
+            {
+                string err = "";
+                foreach (var v in ModelState.Values)
+                    foreach (var e in v.Errors)
+                        err += e.ErrorMessage + "|";
+
+                return BadRequest(new ErrMsg(err, 400));
+            }
+
+            articolo.DataCreazione = DateTime.Today;
+
+            var retVal = await this.articoliRepository.InsArticoli(articolo);
+            if (!retVal)
+                return StatusCode(500, new ErrMsg($"Errore durante l'inserimento dell'articolo {articolo.CodArt}", 500));
+
+            return Ok(await this.GetArticoliByCode(articolo.CodArt));
+        }
+        
+        [HttpPut("modifica")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(422)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(201, Type = typeof(ArticoliDto))]
+        public async Task<IActionResult> UpdateArticoli([FromBody] Articoli articolo)
+        {
+            if (articolo == null)
+                return BadRequest(new ErrMsg("Dati nuovo Articolo non validi", 400));
+
+            if (!ModelState.IsValid)
+            {
+                string err = "";
+                foreach (var v in ModelState.Values)
+                    foreach (var e in v.Errors)
+                        err += e.ErrorMessage + "|";
+
+                return BadRequest(new ErrMsg(err, 400));
+            }
+
+            articolo.DataCreazione = DateTime.Today;
+
+            var retVal = await this.articoliRepository.UpdateArticoli(articolo);
+            if (!retVal)
+                return StatusCode(500, new ErrMsg($"Errore durante la modifica dell'articolo {articolo.CodArt}", 500));
+
+            return Ok(await this.GetArticoliByCode(articolo.CodArt));
+        }
+
+        [HttpDelete("elimina/{codart}")]
+        [ProducesResponseType(201, Type = typeof(InfoMsg))]
+        [ProducesResponseType(400, Type = typeof(ErrMsg))]
+        [ProducesResponseType(422, Type = typeof(ErrMsg))]
+        [ProducesResponseType(500, Type = typeof(ErrMsg))]
+        public async Task<IActionResult> DeleteArticoli(string codart)
+        {
+            if(codart == "")
+                return BadRequest(new ErrMsg("Codice articolo non valido", 400));
+
+            Articoli articolo = await this.articoliRepository.SelArticoloByCodiceLight(codart);
+            if (articolo == null)
+                return NotFound(new ErrMsg($"Articolo con codice {codart} non trovato", 404));
+
+            var retVal = await this.articoliRepository.DelArticoli(articolo);
+            if (!retVal)
+                return StatusCode(500, new ErrMsg($"Errore durante la cancellazione dell'articolo {articolo.CodArt}", 500));
+
+            return Ok(new InfoMsg(DateTime.Today, $"Articolo con codice {articolo.CodArt} cancellato correttamente"));
         }
 
         private List<BarcodeEanDto> PopolaBarcodeDt(Articoli articolo)
@@ -158,7 +257,6 @@ namespace ArticoliWebService.Controllers
             };
             return articoloDto;
         }
-
 
     }
 }

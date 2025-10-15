@@ -10,7 +10,7 @@ namespace ArticoliWebService.Models
     {
         [Key]
         [MinLength(5, ErrorMessage = "Il numero minimo di caratteri è 5")]
-        [MaxLength(5, ErrorMessage = "Il numero massimo di caratteri è 30")]
+        [MaxLength(30, ErrorMessage = "Il numero massimo di caratteri è 30")]
         public string? CodArt { get; set; }
 
         [MinLength(5, ErrorMessage = "Il numero minimo di caratteri è 5")]

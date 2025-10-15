@@ -32,10 +32,17 @@ namespace ArticoliWebService.Services
         {
             return await this.dbContext.Articoli
                 .Where(a => a.CodArt!.Equals(Code))
-                .Include(b => b.Barcode)            
+                .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
                 .Include(d => d.Ingrediente)
                 .Include(e => e.Iva)
+                .FirstOrDefaultAsync();
+        }
+        
+        public async Task<Articoli> SelArticoloByCodiceLight(string Code)
+        {
+            return await this.dbContext.Articoli
+                .Where(a => a.CodArt!.Equals(Code))
                 .FirstOrDefaultAsync();
         }
 
@@ -51,24 +58,28 @@ namespace ArticoliWebService.Services
     
         }
 
-        public bool InsArticoli(Articoli articolo)
+        public async Task<bool> InsArticoli(Articoli articolo)
         {
-            throw new NotImplementedException();
+            await this.dbContext.AddAsync(articolo);
+            return await this.Salva();
         }
 
-        public bool UpdateArticoli(Articoli articolo)
+        public async Task<bool> UpdateArticoli(Articoli articolo)
         {
-            throw new NotImplementedException();
+            this.dbContext.Update(articolo);
+            return await this.Salva();
         }
 
-        public bool DelArticoli(Articoli articolo)
+        public async Task<bool> DelArticoli(Articoli articolo)
         {
-            throw new NotImplementedException();
+            this.dbContext.Remove(articolo);
+            return await this.Salva();
         }
 
-        public bool Salva()
+        private async Task<bool> Salva()
         {
-            throw new NotImplementedException();
+            var saved = await dbContext.SaveChangesAsync();
+            return saved >= 0 ? true : false;
         }
 
         public async Task<bool> ArticoloExists(string Code)

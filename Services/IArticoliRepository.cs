@@ -10,11 +10,11 @@ namespace ArticoliWebService.Services
     {
         Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione);
         Task<Articoli> SelArticoloByCodice(string Code);
+        Task<Articoli> SelArticoloByCodiceLight(string Code);
         Task<Articoli> SelArticoloByEan(string Ean);
-        bool InsArticoli(Articoli articolo);
-        bool UpdateArticoli(Articoli articolo);
-        bool DelArticoli(Articoli articolo);
-        bool Salva();
+        Task<bool> InsArticoli(Articoli articolo);
+        Task<bool> UpdateArticoli(Articoli articolo);
+        Task<bool> DelArticoli(Articoli articolo);        
         Task<bool> ArticoloExists(string Code);
     }
 }
