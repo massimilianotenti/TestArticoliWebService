@@ -6,6 +6,7 @@ using ArticoliWebService.Services;
 using Microsoft.AspNetCore.Mvc;
 using ArticoliWebService.Models;
 using ArticoliWebService.Dtos;
+using AutoMapper;
 
 namespace ArticoliWebService.Controllers
 {
@@ -31,10 +32,15 @@ namespace ArticoliWebService.Controllers
         //     In questo modo, testi solo la logica del controller, isolandola completamente dal database.
         //
         // 3 - L'Iniezione di Dipendenza, gestita in ASP.NET Core dal Service Container, lavora al meglio con le interfacce.
+        //
+        // Quando utiliziamo il code injection impostiamo le variabili come readonly
         private readonly IArticoliRepository articoliRepository;
-        public ArticoliController(IArticoliRepository articoliRepository)
+        private readonly IMapper mapper;
+
+        public ArticoliController(IArticoliRepository articoliRepository, IMapper mapper)
         {
             this.articoliRepository = articoliRepository;
+            this.mapper = mapper;
         }
 
         // Status Code
@@ -55,34 +61,62 @@ namespace ArticoliWebService.Controllers
         // 502 Bad Gateway        
         // 504 Timeout
 
+        // Gli attributi servono per dire a Swagger/OpenAPI che cosa viene restituito
+        //
+        // E' da usare quando si ritorna dataset molto grandi e nel return utiliziamo 
+        // yield return che restituisce gli elementi mano a mano che vengono processati        
+        // [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IAsyncEnumerable<ArticoliDto>))]
+        //
+        // Se vieen popolato completamente un List<ArticoliDto> e lo restituisco
+        // [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ArticoliDto>))]
+        //
+        //
+        // Task<IActionResult> è lo standard precedente in ASP.NET Core
+        // public async Task<IActionResult> GetArticoliByDesc(string filter)
+        //
+        // Task<ActionResult< è la pratica raccomandata per le API moderne in ASP.NET Core, semplifica il codice
+        // e migliora l'integrazione con swagger. E' anche più veloce
+        // public async Task<ActionResult<IEnumerable<ArticoliDto>>> GetArticoliByDesc(string filter)
+
         /// <summary>
         /// Filtra per descrizione ed ottiene una lista di articoli
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpGet("cerca/descrizione/{filter}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(200, Type = typeof(IAsyncEnumerable<ArticoliDto>))]
-        public async Task<IActionResult> GetArticoliByDesc(string filter)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ArticoliDto>))]
+        public async Task<ActionResult<IEnumerable<ArticoliDto>>> GetArticoliByDesc(string filter)
         {
-            var articoliDto = new List<ArticoliDto>();
+            
             var articoli = await this.articoliRepository.SelArticoliByDescrizione(filter);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             if (!articoli.Any())
+                // Per uniformare le risposte utilizziamo una classe ErrMsg
                 //return NotFound(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter));
                 return NotFound(new ErrMsg(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter),
                         404));
 
+            /*
+            var articoliDto = new List<ArticoliDto>();
             foreach (var articolo in articoli)
             {
                 var barcodeDto = this.PopolaBarcodeDt(articolo);
                 var artDto = this.PopolaArticoloDt(articolo, barcodeDto);
                 articoliDto.Add(artDto);
-            }
-            return Ok(articoliDto);
+            }*/
+            /* posso migliorarla
+            var articoliDto = articoli.Select(a =>
+            {
+                var barcodeDto = this.PopolaBarcodeDt(a);
+                return this.PopolaArticoloDt(a, barcodeDto);
+            });
+            */            
+            var articoliDto = this.mapper.Map<IEnumerable<ArticoliDto>>(articoli);
+            return Ok(articoliDto.ToList());
         }
 
         /// <summary>
@@ -90,9 +124,9 @@ namespace ArticoliWebService.Controllers
         /// </summary>
         /// <param name="filter"></param>
         [HttpGet("cerca/codice/{filter}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(200, Type = typeof(ArticoliDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ArticoliDto))]
         public async Task<IActionResult> GetArticoliByCode(string filter)
         {
             if (!await this.articoliRepository.ArticoloExists(filter))
@@ -104,9 +138,9 @@ namespace ArticoliWebService.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var barcodeDto = this.PopolaBarcodeDt(articolo);
-            var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
-
+            //var barcodeDto = this.PopolaBarcodeDt(articolo);
+            //var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
+            var articoloDto = this.mapper.Map<ArticoliDto>(articolo);
             return Ok(articoloDto);
         }
 
@@ -116,9 +150,9 @@ namespace ArticoliWebService.Controllers
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpGet("cerca/ean/{filter}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(200, Type = typeof(ArticoliDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ArticoliDto))]
         public async Task<IActionResult> GetArticoliByEan(string filter)
         {
             var articolo = await this.articoliRepository.SelArticoloByEan(filter);
@@ -130,18 +164,19 @@ namespace ArticoliWebService.Controllers
                 return NotFound(new ErrMsg(string.Format("Non è stato trovato l'articolo con l'EAN {0}", filter),
                         404));
 
-            var barcodeDto = this.PopolaBarcodeDt(articolo);
-            var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
+            //var barcodeDto = this.PopolaBarcodeDt(articolo);
+            //var articoloDto = this.PopolaArticoloDt(articolo, barcodeDto);
+            var articoloDto = this.mapper.Map<ArticoliDto>(articolo);
 
             return Ok(articoloDto);
         }
 
         [HttpPost("inserisci")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(422)]
-        [ProducesResponseType(409)]
-        [ProducesResponseType(500)]
-        [ProducesResponseType(201, Type = typeof(ArticoliDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ArticoliDto))]
         public async Task<IActionResult> SaveArticoli([FromBody] Articoli articolo)
         {
             if (articolo == null)
@@ -169,12 +204,12 @@ namespace ArticoliWebService.Controllers
 
             return Ok(await this.GetArticoliByCode(articolo.CodArt));
         }
-        
+
         [HttpPut("modifica")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(422)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(201, Type = typeof(ArticoliDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ArticoliDto))]
         public async Task<IActionResult> UpdateArticoli([FromBody] Articoli articolo)
         {
             if (articolo == null)
@@ -200,13 +235,13 @@ namespace ArticoliWebService.Controllers
         }
 
         [HttpDelete("elimina/{codart}")]
-        [ProducesResponseType(201, Type = typeof(InfoMsg))]
-        [ProducesResponseType(400, Type = typeof(ErrMsg))]
-        [ProducesResponseType(422, Type = typeof(ErrMsg))]
-        [ProducesResponseType(500, Type = typeof(ErrMsg))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrMsg))]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(ErrMsg))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrMsg))]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(InfoMsg))]
         public async Task<IActionResult> DeleteArticoli(string codart)
         {
-            if(codart == "")
+            if (codart == "")
                 return BadRequest(new ErrMsg("Codice articolo non valido", 400));
 
             Articoli articolo = await this.articoliRepository.SelArticoloByCodiceLight(codart);
@@ -220,6 +255,7 @@ namespace ArticoliWebService.Controllers
             return Ok(new InfoMsg(DateTime.Today, $"Articolo con codice {articolo.CodArt} cancellato correttamente"));
         }
 
+        /*
         private List<BarcodeEanDto> PopolaBarcodeDt(Articoli articolo)
         {
             var barcodeDto = new List<BarcodeEanDto>();
@@ -257,6 +293,7 @@ namespace ArticoliWebService.Controllers
             };
             return articoloDto;
         }
+        */
 
     }
 }

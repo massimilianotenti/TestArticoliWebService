@@ -18,7 +18,7 @@ namespace ArticoliWebService.Dtos
         public FamAssortDto? FamAssort { get; set; }
         public IngredientiDto? Ingredienti { get; set; }
         public IvaDto? Iva { get; set; }
-        public string Categoria { get; set; }
+        public string? Categoria { get; set; }
         public string? IdStatoArticolo { get; set; }
     }
 

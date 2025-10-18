@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArticoliWebService.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArticoliWebService.Services
@@ -18,8 +19,22 @@ namespace ArticoliWebService.Services
 
         public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione)
         {
+            // .Where(a => a.Descrizione!.Contains(descrizione))
+            // equivale a dire "Caro compilatore, vedo che mi stai avvisando che 
+            // a.Descrizione potrebbe essere null e che chiamare .Contains() 
+            // potrebbe causare un errore. Non preoccuparti, ti garantisco io che in 
+            // questo punto del codice non sarà mai null."
+            //
+            // Con questa piccola modifica, la tua query ora si legge: "trova tutti gli articoli 
+            // dove la descrizione esiste e contiene il testo cercato". Questo previene 
+            // completamente il rischio di crash a runtime.
+            // .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione))
+            // In sintesi, l'operatore ! è uno strumento da usare con estrema cautela, solo quando 
+            // sei assolutamente certo al 100% che un valore non possa essere null. Nella maggior 
+            // parte dei casi, un controllo esplicito != null è la scelta migliore per un codice 
+            // robusto e professionale.                
             return await this.dbContext.Articoli
-                .Where(a => a.Descrizione!.Contains(descrizione))
+                .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione))
                 .OrderBy(a => a.Descrizione)
                 .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
@@ -28,10 +43,10 @@ namespace ArticoliWebService.Services
                 .ToListAsync();
         }
 
-        public async Task<Articoli> SelArticoloByCodice(string Code)
+        public async Task<Articoli?> SelArticoloByCodice(string Code)
         {
             return await this.dbContext.Articoli
-                .Where(a => a.CodArt!.Equals(Code))
+                .Where(a => a.CodArt == Code)
                 .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
                 .Include(d => d.Ingrediente)
@@ -39,23 +54,22 @@ namespace ArticoliWebService.Services
                 .FirstOrDefaultAsync();
         }
         
-        public async Task<Articoli> SelArticoloByCodiceLight(string Code)
+        public async Task<Articoli?> SelArticoloByCodiceLight(string Code)
         {
             return await this.dbContext.Articoli
-                .Where(a => a.CodArt!.Equals(Code))
+                .Where(a => a.CodArt == Code)
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Articoli> SelArticoloByEan(string Ean)
-        {            
+        public async Task<Articoli?> SelArticoloByEan(string Ean)
+        {
             return await this.dbContext.Articoli
                 .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
                 .Include(d => d.Ingrediente)
                 .Include(e => e.Iva)
-                .Where(a => a.Barcode.Any(b => b.BarCode.Equals(Ean)))
+                .Where(a => a.Barcode != null && a.Barcode.Any(b => b.BarCode == Ean))
                 .FirstOrDefaultAsync();
-    
         }
 
         public async Task<bool> InsArticoli(Articoli articolo)
