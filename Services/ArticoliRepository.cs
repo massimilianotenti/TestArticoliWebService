@@ -43,6 +43,23 @@ namespace ArticoliWebService.Services
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione, string idCat)
+        {
+            bool isNumeric = int.TryParse(idCat, out int n);
+            if(string.IsNullOrWhiteSpace(idCat) || !isNumeric)
+                return await this.SelArticoliByDescrizione(descrizione);
+            
+            return await this.dbContext.Articoli
+                .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione))
+                .Where(a => a.IdFamAss == int.Parse(idCat))
+                .OrderBy(a => a.Descrizione)
+                .Include(b => b.Barcode)
+                .Include(c => c.FamAssort)
+                .Include(d => d.Ingrediente)
+                .Include(e => e.Iva)
+                .ToListAsync();
+        }
+
         public async Task<Articoli?> SelArticoloByCodice(string Code)
         {
             return await this.dbContext.Articoli

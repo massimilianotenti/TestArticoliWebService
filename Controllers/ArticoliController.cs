@@ -87,10 +87,11 @@ namespace ArticoliWebService.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ArticoliDto>))]
-        public async Task<ActionResult<IEnumerable<ArticoliDto>>> GetArticoliByDesc(string filter)
+        public async Task<ActionResult<IEnumerable<ArticoliDto>>> GetArticoliByDesc(string filter,
+            [FromQuery (Name = "cat")] string? idCat)
         {
             
-            var articoli = await this.articoliRepository.SelArticoliByDescrizione(filter);
+            var articoli = await this.articoliRepository.SelArticoliByDescrizione(filter, idCat);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 

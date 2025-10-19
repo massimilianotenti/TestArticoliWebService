@@ -10,6 +10,8 @@ builder.Services.AddCors();
 builder.Services.AddDbContext<AlphaShopDbContext>();
 // Inversion Of Control: a livello di configurazione si specifica quale classe dobbiamo implementare per un'interfaccia
 builder.Services.AddScoped<IArticoliRepository, ArticoliRepository>();
+// Tutti gli assembly della nostra applicazione sono soggetti ad automapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 

@@ -42,6 +42,9 @@ namespace ArticoliWebService.Dtos
 
     public class IvaDto
     {
+        // Costruttore senza parametri per AutoMapper e deserializzazione
+        public IvaDto() {}
+
         public IvaDto(string descrizione, Int16 aliquota)
         {            
             this.Descrizione = descrizione;
