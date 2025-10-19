@@ -32,11 +32,11 @@ namespace ArticoliWebService.Profiles
                 .ForMember(dest => dest.CodStat, opt => opt.MapFrom(src => Clean(src.CodStat)))
                 .ForMember(dest => dest.IdStatoArticolo, opt => opt.MapFrom(src => Clean(src.IdStatoArt)))
                 .ForMember(dest => dest.PzCart, opt => opt.MapFrom(src => Clean(src.PzCart)))            
-   /*             .ForMember(
+                .ForMember(
                     dest => dest.Categoria,
                     opt => opt.MapFrom(src => $"{Clean(src.IdFamAss)} {(src.FamAssort != null ? Clean(src.FamAssort.Descrizione) : string.Empty)}")
-                )*/
-                .ForMember(dest => dest.Categoria, opt => opt.MapFrom(src => src.FamAssort != null ? src.FamAssort.Descrizione : string.Empty))                
+                )
+                //.ForMember(dest => dest.Categoria, opt => opt.MapFrom(src => src.FamAssort != null ? src.FamAssort.Descrizione : string.Empty))                
                 .ForMember(dest => dest.Ean, opt => opt.MapFrom(src => src.Barcode));
         }
 

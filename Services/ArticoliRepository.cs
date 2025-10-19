@@ -17,7 +17,7 @@ namespace ArticoliWebService.Services
             this.dbContext = alphaShopDbContext;
         }
 
-        public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione)
+        public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione, string? idCat)
         {
             // .Where(a => a.Descrizione!.Contains(descrizione))
             // equivale a dire "Caro compilatore, vedo che mi stai avvisando che 
@@ -33,32 +33,21 @@ namespace ArticoliWebService.Services
             // sei assolutamente certo al 100% che un valore non possa essere null. Nella maggior 
             // parte dei casi, un controllo esplicito != null è la scelta migliore per un codice 
             // robusto e professionale.                
-            return await this.dbContext.Articoli
-                .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione))
-                .OrderBy(a => a.Descrizione)
-                .Include(b => b.Barcode)
-                .Include(c => c.FamAssort)
-                .Include(d => d.Ingrediente)
-                .Include(e => e.Iva)
-                .ToListAsync();
-        }
 
-        public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione, string idCat)
-        {
-            bool isNumeric = int.TryParse(idCat, out int n);
-            if(string.IsNullOrWhiteSpace(idCat) || !isNumeric)
-                return await this.SelArticoliByDescrizione(descrizione);
+            var query = this.dbContext.Articoli
+                .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione));
+
+            if (!string.IsNullOrWhiteSpace(idCat) && int.TryParse(idCat, out int catId))            
+                query = query.Where(a => a.IdFamAss == catId);            
             
-            return await this.dbContext.Articoli
-                .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione))
-                .Where(a => a.IdFamAss == int.Parse(idCat))
+            return await query                
                 .OrderBy(a => a.Descrizione)
                 .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
                 .Include(d => d.Ingrediente)
                 .Include(e => e.Iva)
                 .ToListAsync();
-        }
+        }        
 
         public async Task<Articoli?> SelArticoloByCodice(string Code)
         {

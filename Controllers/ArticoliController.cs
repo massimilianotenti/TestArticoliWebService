@@ -89,8 +89,7 @@ namespace ArticoliWebService.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ArticoliDto>))]
         public async Task<ActionResult<IEnumerable<ArticoliDto>>> GetArticoliByDesc(string filter,
             [FromQuery (Name = "cat")] string? idCat)
-        {
-            
+        {            
             var articoli = await this.articoliRepository.SelArticoliByDescrizione(filter, idCat);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -98,9 +97,12 @@ namespace ArticoliWebService.Controllers
             if (!articoli.Any())
                 // Per uniformare le risposte utilizziamo una classe ErrMsg
                 //return NotFound(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter));
-                return NotFound(new ErrMsg(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter),
-                        404));
-
+                if(idCat != null)
+                    return NotFound(new ErrMsg(string.Format("Non è stato trovato alcun articolo con la descrizione {0} e categoria {1}", filter, idCat),
+                            404));
+                else
+                    return NotFound(new ErrMsg(string.Format("Non è stato trovato alcun articolo con la descrizione {0}", filter),
+                            404));
             /*
             var articoliDto = new List<ArticoliDto>();
             foreach (var articolo in articoli)
