@@ -246,6 +246,8 @@ namespace ArticoliWebService.Controllers
         {
             if (codart == "")
                 return BadRequest(new ErrMsg("Codice articolo non valido", 400));
+            /*if(codart == "150Test")
+                return BadRequest(new ErrMsg("Codice articolo non valido", 400));*/
 
             Articoli articolo = await this.articoliRepository.SelArticoloByCodiceLight(codart);
             if (articolo == null)

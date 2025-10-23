@@ -17,6 +17,7 @@ namespace ArticoliWebService.Services
             this.dbContext = alphaShopDbContext;
         }
 
+        #region Articoli Selezione
         public async Task<IEnumerable<Articoli>> SelArticoliByDescrizione(string descrizione, string? idCat)
         {
             // .Where(a => a.Descrizione!.Contains(descrizione))
@@ -37,10 +38,10 @@ namespace ArticoliWebService.Services
             var query = this.dbContext.Articoli
                 .Where(a => a.Descrizione != null && a.Descrizione.Contains(descrizione));
 
-            if (!string.IsNullOrWhiteSpace(idCat) && int.TryParse(idCat, out int catId))            
-                query = query.Where(a => a.IdFamAss == catId);            
-            
-            return await query                
+            if (!string.IsNullOrWhiteSpace(idCat) && int.TryParse(idCat, out int catId))
+                query = query.Where(a => a.IdFamAss == catId);
+
+            return await query
                 .OrderBy(a => a.Descrizione)
                 .Include(b => b.Barcode)
                 .Include(c => c.FamAssort)
@@ -78,6 +79,15 @@ namespace ArticoliWebService.Services
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<bool> ArticoloExists(string Code)
+        {
+            return await this.dbContext.Articoli
+                .AnyAsync(c => c.CodArt == Code);
+        }
+
+        #endregion
+
+        #region Articoli Variazioni
         public async Task<bool> InsArticoli(Articoli articolo)
         {
             await this.dbContext.AddAsync(articolo);
@@ -101,12 +111,26 @@ namespace ArticoliWebService.Services
             var saved = await dbContext.SaveChangesAsync();
             return saved >= 0 ? true : false;
         }
+        
+        #endregion
 
-        public async Task<bool> ArticoloExists(string Code)
+        #region Tabelle Selezione
+
+        public async Task<IEnumerable<Iva>> SelIva()
         {
-            return await this.dbContext.Articoli
-                .AnyAsync(c => c.CodArt == Code);
+            return await this.dbContext.Iva
+                .OrderBy(i => i.Aliquota)
+                .ToListAsync();
         }
+
+        public async Task<IEnumerable<FamAssort>> SelFamAssort()
+        {
+            return await this.dbContext.FamAssorts
+                .OrderBy(f => f.Descrizione)
+                .ToListAsync();
+        }
+
+        #endregion
         
     }
 }
