@@ -20,6 +20,8 @@ namespace ArticoliWebService.Dtos
         public IvaDto? Iva { get; set; }
         public string? Categoria { get; set; }
         public string? IdStatoArticolo { get; set; }
+        public int? IdIva { get; set; }
+        public int? IdFamAss { get; set; }
     }
 
     public class BarcodeEanDto
@@ -46,11 +48,12 @@ namespace ArticoliWebService.Dtos
         public IvaDto() {}
 
         public IvaDto(string descrizione, Int16 aliquota)
-        {            
+        {
             this.Descrizione = descrizione;
             this.Aliquota = aliquota;
         }
-        
+
+        public int IdIva { get; set; }
         public string? Descrizione { get; set; }
         public Int16? Aliquota { get; set; }
     }

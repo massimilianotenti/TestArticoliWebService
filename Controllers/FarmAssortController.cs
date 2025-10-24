@@ -11,7 +11,7 @@ namespace ArticoliWebService.Controllers
 {
     [ApiController]
     [Produces("application/json")]
-    [Route("api/FarmAssort")]
+    [Route("api/farmassort")]
     public class FarmAssortController : Controller
     {
         private readonly IArticoliRepository articoliRepository;
