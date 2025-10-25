@@ -28,7 +28,17 @@ namespace ArticoliWebService.Services
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlServer(connectionString);
+            options
+                .UseSqlServer(connectionString);
+
+            #if DEBUG
+                options
+                    // Abilita il logging di tutte le query generate da EF Core sulla console.
+                    // Utile per vedere cosa sta succedendo "sotto il cofano".
+                    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+                    // Abilita la visualizzazione dei valori dei parametri nei log.
+                    .EnableSensitiveDataLogging(); // ATTENZIONE: Usare solo in sviluppo!
+            #endif
         }
 
         // Le Data Annotations sui model hanno lo scopo principale di validazione del modello, i 
